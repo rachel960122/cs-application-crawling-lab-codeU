@@ -56,6 +56,9 @@ public class WikiCrawler {
 	 */
 	public String crawl(boolean testing) throws IOException {
         // FILL THIS IN!
+        if (queue.isEmpty()) {
+        	return null;
+        }
         String url = queue.poll();
         if (testing) {
         	Elements paragraphs = wf.readWikipedia(url);
@@ -101,7 +104,7 @@ public class WikiCrawler {
 	 * @param href
 	 */
 	boolean isInternalLink(String href) {
-		return href.startsWith("/wiki");
+		return href.startsWith("/wiki/");
 	}
 
 	public static void main(String[] args) throws IOException {
