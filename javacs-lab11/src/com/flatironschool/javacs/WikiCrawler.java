@@ -8,6 +8,7 @@ import java.util.Queue;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jsoup.nodes.Node;
 
 import redis.clients.jedis.Jedis;
 
@@ -55,7 +56,22 @@ public class WikiCrawler {
 	 */
 	public String crawl(boolean testing) throws IOException {
         // FILL THIS IN!
-		return null;
+        String url = queue.poll();
+        if (testing) {
+        	Elements paragraphs = wf.readWikipedia(url);
+        	index.indexPage(url, paragraphs);
+        	queueInternalLinks(paragraphs);
+        	return url;
+        } else {
+        	if(index.isIndexed(url)) {
+        		return null;
+        	} else {
+        		Elements paragraphs2 = wf.fetchWikipedia(url);
+        		index.indexPage(url, paragraphs2);
+        		queueInternalLinks(paragraphs2);
+        		return url;
+        	}
+        }
 	}
 	
 	/**
@@ -66,6 +82,26 @@ public class WikiCrawler {
 	// NOTE: absence of access level modifier means package-level
 	void queueInternalLinks(Elements paragraphs) {
         // FILL THIS IN!
+        for (Element paragraph : paragraphs) {
+        	Iterable<Node> iter = new WikiNodeIterable(paragraph);
+        	for (Node node : iter) {
+        		if (node instanceof Element) {
+        			if (((Element)node).tagName().equals("a") && isInternalLink(((Element)node).attr("href"))) {
+        				// System.out.println(((Element)node).attr("href"));
+        				queue.offer("https://en.wikipedia.org" + ((Element)node).attr("href"));
+        			}
+        		}
+        	}
+        }
+	}
+
+	/**
+	 * Checks if a url is an internal link
+	 * 
+	 * @param href
+	 */
+	boolean isInternalLink(String href) {
+		return href.startsWith("/wiki");
 	}
 
 	public static void main(String[] args) throws IOException {
